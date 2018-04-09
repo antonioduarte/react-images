@@ -212,7 +212,7 @@ class Lightbox extends Component {
     )
   }
   renderDialog() {
-    const { backdropClosesModal, isOpen, showThumbnails, width } = this.props
+    const { backdropClosesModal, isOpen, showThumbnails, width, isVideo } = this.props
 
     const { imageLoaded } = this.state
 
@@ -236,7 +236,7 @@ class Lightbox extends Component {
           >
             {imageLoaded && this.renderHeader()}
             {this.renderImages()}
-            {this.renderSpinner()}
+            {!isVideo && this.renderSpinner()}
             {imageLoaded && this.renderFooter()}
           </div>
           {imageLoaded && this.renderThumbnails()}
@@ -248,8 +248,15 @@ class Lightbox extends Component {
     )
   }
   renderImages() {
-    const { currentImage, images, onClickImage, showThumbnails, isVideo, videoUrl } = this.props
-
+    const {
+      currentImage,
+      images,
+      onClickImage,
+      showThumbnails,
+      hasVideo,
+      videoPosition,
+      videoUrl,
+    } = this.props
     const { imageLoaded } = this.state
 
     if (!images || !images.length) return null
@@ -271,16 +278,13 @@ class Lightbox extends Component {
 					https://fb.me/react-unknown-prop is resolved
 					<Swipeable onSwipedLeft={this.gotoNext} onSwipedRight={this.gotoPrev} />
 				*/}
-        {isVideo ? (
+        {hasVideo && videoPosition === currentImage ? (
           <iframe
+            height="480"
+            width="720"
             src={videoUrl}
-            frameborder="0"
-            allow="autoplay; encrypted-media"
-            className={css(this.classes.image, imageLoaded && this.classes.imageLoaded)}
-            style={{
-              cursor: onClickImage ? 'pointer' : 'auto',
-              maxHeight: `calc(100vh - ${heightOffset})`,
-            }}
+            frameBorder="0"
+            className={css(this.classes.video)}
           />
         ) : (
           <img
@@ -390,8 +394,9 @@ Lightbox.propTypes = {
   theme: PropTypes.object,
   thumbnailOffset: PropTypes.number,
   width: PropTypes.number,
-  isVideo: PropTypes.bool,
+  hasVideo: PropTypes.bool,
   videoUrl: PropTypes.string,
+  videoPosition: PropTypes.number,
 }
 Lightbox.defaultProps = {
   closeButtonTitle: 'Close (Esc)',
@@ -411,8 +416,9 @@ Lightbox.defaultProps = {
   theme: {},
   thumbnailOffset: 2,
   width: 1024,
-  isVideo: false,
-  videoUrl: '',
+  hasVideo: PropTypes.bool,
+  videoUrl: undefined,
+  videoPosition: 0,
 }
 Lightbox.childContextTypes = {
   theme: PropTypes.object.isRequired,
@@ -441,6 +447,10 @@ const defaultStyles = {
   },
   imageLoaded: {
     opacity: 1,
+  },
+  video: {
+    margin: '0 auto', // maintain center on very short screens OR very narrow image
+    maxWidth: '100%',
   },
   spinner: {
     position: 'absolute',
